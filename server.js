@@ -18,6 +18,13 @@ MongoClient.connect("mongodb://localhost:27017/exampleDb", function(err, databas
 });
 
 app.use(bodyParser.urlencoded({extended:true}));
+
+// teach our server app to read json
+app.use(bodyParser.json());
+
+// make public folder accessible to the public
+app.use(express.static('public'));
+
 app.set('view engine', 'ejs');
 
 app.get('/', (req,res) => {
@@ -43,4 +50,29 @@ app.post('/quotes', (req,res) => {
 		res.redirect('/');
 	});
 	
+});
+
+app.put('/quotes', (req,res) => {
+	db.collection('quotes')
+		.findOneAndUpdate({name:'Yoda'}, {
+			$set: {
+				name: req.body.name,
+				quote: req.body.quote
+			}
+		}, {
+			sort: {_id: -1},
+			upsert: true
+		}, (err,result) => {
+			if (err) return res.send(err);
+
+			res.send(result);
+		});
+});
+
+app.delete('/quotes', (req, res) => {
+	db.collection('quotes').findOneAndDelete({name: req.body.name},
+	(err, result) => {
+		if (err) return res.send(500, err)
+		res.send(result)
+	})
 });
